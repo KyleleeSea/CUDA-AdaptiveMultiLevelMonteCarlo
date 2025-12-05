@@ -13,8 +13,6 @@ struct TestCase {
 };
 
 int main() {
-    rng_initialisation();
-
     // Define test cases
     std::vector<TestCase> tests = {
         { "AAPL (1-year European Call)", 1.0, 0.02, 0.25, 280.0 },

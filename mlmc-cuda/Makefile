@@ -2,11 +2,12 @@
 # Project settings
 ###########################################################
 
-EXECUTABLE := test-suite
+EXECUTABLE      := test-suite
+CLI_EXECUTABLE  := mlmc-cli
 
 CU_FILES   := mlmc-cuda.cu
 CU_DEPS    :=
-CC_FILES   := test-suite.cpp
+CC_FILES   := test-suite.cpp mlmc-cli.cpp   # ADD CLI WRAPPER HERE
 
 OBJDIR     = objs
 LOGS       := logs
@@ -25,7 +26,7 @@ NVCCFLAGS  = -O3 -m64 --gpu-architecture compute_61 --allow-unsupported-compiler
 # CUDA libs
 LDFLAGS    = -L/usr/local/cuda-11.7/lib64/ -lcudart
 
-# Extra libraries (none for now, but keep the format)
+# Extra libraries (none for now)
 LIBS       :=
 FRAMEWORKS :=
 
@@ -36,7 +37,8 @@ LDFRAMEWORKS  := $(addprefix -framework , $(FRAMEWORKS))
 # Objects
 ###########################################################
 
-OBJS = $(OBJDIR)/test-suite.o $(OBJDIR)/mlmc-cuda.o
+OBJS        = $(OBJDIR)/test-suite.o $(OBJDIR)/mlmc-cuda.o
+CLI_OBJS    = $(OBJDIR)/mlmc-cli.o $(OBJDIR)/mlmc-cuda.o
 
 ###########################################################
 # Targets
@@ -44,15 +46,15 @@ OBJS = $(OBJDIR)/test-suite.o $(OBJDIR)/mlmc-cuda.o
 
 .PHONY: all dirs clean
 
-all: $(EXECUTABLE)
+all: $(EXECUTABLE) $(CLI_EXECUTABLE)
 
-default: $(EXECUTABLE)
+default: all
 
 dirs:
 	mkdir -p $(OBJDIR)
 
 clean:
-	rm -rf $(OBJDIR) *~ $(EXECUTABLE) $(LOGS)
+	rm -rf $(OBJDIR) *~ $(EXECUTABLE) $(CLI_EXECUTABLE) $(LOGS)
 
 ###########################################################
 # Linking
@@ -60,6 +62,9 @@ clean:
 
 $(EXECUTABLE): dirs $(OBJS)
 	$(CXX) $(CXXFLAGS) -o $@ $(OBJS) $(LDFLAGS) $(LDLIBS) $(LDFRAMEWORKS)
+
+$(CLI_EXECUTABLE): dirs $(CLI_OBJS)
+	$(CXX) $(CXXFLAGS) -o $@ $(CLI_OBJS) $(LDFLAGS) $(LDLIBS) $(LDFRAMEWORKS)
 
 ###########################################################
 # Compilation rules
