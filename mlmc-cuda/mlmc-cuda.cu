@@ -29,9 +29,9 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 
 // Kernel to initialize the currand state for state[tid]
+// Precondition: state is malloc'd to size MAX_NUM_THREADS
 __global__ void setup_curand(curandState* state) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
-    // Initialize the state for the current thread
     curand_init(RAND_SEED, tid, 0, &state[tid]); 
 }
 
@@ -330,9 +330,9 @@ float mlmc(int Lmin, int Lmax, int N0, float eps, bool diag, double T, double r,
   suml[2][l] = sum over |Y_l - Y_{l-1}|^2
 
   runtimes[l]: array of the total time spent at level l
-  runtime_by_part[1]: total time spent in Thrust array initialization
-  runtime_by_part[2]: total time spent in kernel runtime
-  runtime_by_part[3]: total time spent in Thrust reduction
+  runtime_by_part[0]: total time spent in Thrust array initialization
+  runtime_by_part[1]: total time spent in kernel runtime
+  runtime_by_part[2]: total time spent in Thrust reduction
 
   ml[l] = mean |Y_l - Y_{l-1}| at level l 
   Vl[l] = variance at level l 
