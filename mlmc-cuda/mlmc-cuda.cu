@@ -28,14 +28,14 @@
 // All cuda kernels (GPU code) here
 ///////////////////////////////////////////////////////////////////////////////////////
 
-// Precondition: curandState* is malloc'd to size MAX_NUM_THREADS 
-// Initializes MAX_NUM_THREADS independent curand states
+// Kernel to initialize the currand state for state[tid]
 __global__ void setup_curand(curandState* state) {
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     // Initialize the state for the current thread
     curand_init(RAND_SEED, tid, 0, &state[tid]); 
 }
 
+// Calculates the milstein factor given r, sig, h and dW
 __device__ __forceinline__
 double milstein_factor(double r, double sig, double h, double dW)
 {
@@ -43,6 +43,7 @@ double milstein_factor(double r, double sig, double h, double dW)
     return 1.0f + r*h + sig*dW + 0.5f*sig*sig*(dw2 - h);
 }
 
+// Reduces fine_factors and coarse_factors together
 __device__ __forceinline__
 void reduce_two(double* fine_factors, double* coarse_factors)
 {
@@ -302,7 +303,24 @@ __global__ void mlmc_parallel_timestep_level(double* sums_ptr, double* squared_s
 // All CPU code here 
 ///////////////////////////////////////////////////////////////////////////////////////
 
+/*
+Runs adaptive multi level monte carlo for European option payoff estimation for the
+asset respresented by T, r, sigma, K
 
+Input:
+Lmin: # levels to start at
+Lmax: maximum number of levels, fails to converge if exceeded
+N0: number of samples to start with
+eps: convergence epsilon value, runtime increases as eps decreases
+diag: diagnostics printed if true
+T: asset time to maturity
+r: risk free interest rate
+sigma: asset volatility
+K: asset strike price
+
+Output:
+Estimated option payoff
+*/
 float mlmc(int Lmin, int Lmax, int N0, float eps, bool diag, double T, double r, double sigma, double K) {
 
   /*
